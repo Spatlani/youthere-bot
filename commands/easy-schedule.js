@@ -180,7 +180,7 @@ module.exports = {
     if (!timezone) {
       return interaction.reply({ 
         content: `Invalid timezone code. Please use one of the provided options.`, 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
     
@@ -189,7 +189,7 @@ module.exports = {
     if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
       return interaction.reply({ 
         content: 'Invalid time format. Please use HH:MM in 24-hour format (e.g., 09:00, 17:30).', 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
     
@@ -207,7 +207,7 @@ module.exports = {
       };
       
       // Save user availability
-      const success = utils.setUserAvailability(
+      const success = await utils.setUserAvailability(
         interaction.user.id,
         interaction.user.username,
         timezone,
@@ -218,19 +218,19 @@ module.exports = {
         const formattedSchedule = utils.formatSchedule(schedule, timezone);
         await interaction.reply({ 
           content: `✅ Your availability has been set!\n\n${formattedSchedule}`, 
-          flags: { ephemeral: true }
+          ephemeral: true
         });
       } else {
         await interaction.reply({ 
           content: '❌ Failed to save your availability. Please try again.', 
-          flags: { ephemeral: true }
+          ephemeral: true
         });
       }
     } catch (error) {
       console.error('Error setting availability:', error);
       await interaction.reply({ 
         content: '❌ There was an error processing your schedule. Please try again.', 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
   },

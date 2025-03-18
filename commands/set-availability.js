@@ -23,7 +23,7 @@ module.exports = {
     if (!moment.tz.zone(timezone)) {
       return interaction.reply({ 
         content: `Invalid timezone. See the list of valid timezones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones`, 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
     
@@ -32,7 +32,7 @@ module.exports = {
       const schedule = utils.parseScheduleString(scheduleString);
       
       // Save user availability
-      const success = utils.setUserAvailability(
+      const success = await utils.setUserAvailability(
         interaction.user.id,
         interaction.user.username,
         timezone,
@@ -43,19 +43,19 @@ module.exports = {
         const formattedSchedule = utils.formatSchedule(schedule, timezone);
         await interaction.reply({ 
           content: `✅ Your availability has been set!\n\n${formattedSchedule}`, 
-          flags: { ephemeral: true }
+          ephemeral: true
         });
       } else {
         await interaction.reply({ 
           content: '❌ Failed to save your availability. Please try again.', 
-          flags: { ephemeral: true }
+          ephemeral: true
         });
       }
     } catch (error) {
       console.error('Error setting availability:', error);
       await interaction.reply({ 
         content: '❌ There was an error processing your schedule. Make sure it follows the format: day:start-end,start-end;day:start-end', 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
   },

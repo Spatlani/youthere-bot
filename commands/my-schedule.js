@@ -8,17 +8,17 @@ module.exports = {
     .setDescription('View your own availability schedule'),
   
   async execute(interaction) {
-    const userData = utils.getUserAvailability(interaction.user.id);
+    const userData = await utils.getUserAvailability(interaction.user.id);
     
     if (!userData) {
       return interaction.reply({
         content: 'You haven\'t set your availability schedule yet. Use `/set-availability` to set it up.',
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
     
     const userLocalTime = moment().tz(userData.timezone).format('YYYY-MM-DD HH:mm:ss');
-    const isAvailable = utils.isUserCurrentlyAvailable(interaction.user.id);
+    const isAvailable = await utils.isUserCurrentlyAvailable(interaction.user.id);
     
     const embed = new EmbedBuilder()
       .setTitle('Your Availability Schedule')
@@ -50,6 +50,6 @@ module.exports = {
     
     embed.setFooter({ text: `Last updated: ${new Date(userData.updatedAt).toLocaleString()}` });
     
-    await interaction.reply({ embeds: [embed], flags: { ephemeral: true } });
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };

@@ -8,7 +8,7 @@ module.exports = {
     .setDescription('Check which team members are currently available'),
   
   async execute(interaction) {
-    const availableUsers = utils.getCurrentlyAvailableUsers();
+    const availableUsers = await utils.getCurrentlyAvailableUsers();
     
     if (availableUsers.length === 0) {
       return interaction.reply('No team members are currently available.');

@@ -13,14 +13,14 @@ module.exports = {
   
   async execute(interaction) {
     const targetUser = interaction.options.getUser('user');
-    const userData = utils.getUserAvailability(targetUser.id);
+    const userData = await utils.getUserAvailability(targetUser.id);
     
     if (!userData) {
       return interaction.reply(`${targetUser.username} hasn't set their availability schedule yet.`);
     }
     
     const userLocalTime = moment().tz(userData.timezone).format('YYYY-MM-DD HH:mm:ss');
-    const isAvailable = utils.isUserCurrentlyAvailable(targetUser.id);
+    const isAvailable = await utils.isUserCurrentlyAvailable(targetUser.id);
     
     const embed = new EmbedBuilder()
       .setTitle(`${targetUser.username}'s Availability`)

@@ -33,14 +33,14 @@ module.exports = {
     if (!moment.tz.zone(fromTimezone)) {
       return interaction.reply({ 
         content: `Invalid source timezone. See the list of valid timezones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones`, 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
     
     if (!moment.tz.zone(toTimezone)) {
       return interaction.reply({ 
         content: `Invalid target timezone. See the list of valid timezones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones`, 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
     
@@ -49,7 +49,7 @@ module.exports = {
       if (!timeStr.match(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
         return interaction.reply({ 
           content: 'Invalid time format. Please use HH:MM in 24-hour format (e.g., 14:30 for 2:30 PM).', 
-          flags: { ephemeral: true }
+          ephemeral: true
         });
       }
       
@@ -57,7 +57,7 @@ module.exports = {
       if (!moment(dateStr, 'YYYY-MM-DD', true).isValid()) {
         return interaction.reply({ 
           content: 'Invalid date format. Please use YYYY-MM-DD (e.g., 2025-03-18).', 
-          flags: { ephemeral: true }
+          ephemeral: true
         });
       }
       
@@ -70,7 +70,7 @@ module.exports = {
       console.error('Error converting time:', error);
       await interaction.reply({ 
         content: 'There was an error converting the time. Please check your input and try again.', 
-        flags: { ephemeral: true }
+        ephemeral: true
       });
     }
   },
