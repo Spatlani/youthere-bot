@@ -1,35 +1,71 @@
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment-timezone');
+let UserAvailability;
 
-// Data file path
+// Try to import the MongoDB model, but don't fail if it's not available
+try {
+  UserAvailability = require('./models/UserAvailability');
+} catch (error) {
+  console.log('MongoDB model not available, using file-based storage');
+}
+
+// Data file path for fallback file-based storage
 const dataPath = path.join(__dirname, 'data', 'availability.json');
 
-// Get all user availability data
-function getAllAvailability() {
+// Helper function to determine if we're using MongoDB
+const isUsingMongoDB = () => {
+  return !!UserAvailability;
+};
+
+// Get all user availability data (file-based fallback)
+function getAllAvailabilityFromFile() {
   try {
     const data = fs.readFileSync(dataPath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error reading availability data:', error);
+    console.error('Error reading availability data from file:', error);
     return { users: [] };
   }
 }
 
-// Save all user availability data
-function saveAllAvailability(data) {
+// Save all user availability data (file-based fallback)
+function saveAllAvailabilityToFile(data) {
   try {
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
     return true;
   } catch (error) {
-    console.error('Error saving availability data:', error);
+    console.error('Error saving availability data to file:', error);
     return false;
   }
 }
 
 // Set a user's availability
-function setUserAvailability(userId, username, timezone, schedule) {
-  const data = getAllAvailability();
+async function setUserAvailability(userId, username, timezone, schedule) {
+  // Try to use MongoDB if available
+  if (isUsingMongoDB()) {
+    try {
+      await UserAvailability.findOneAndUpdate(
+        { userId },
+        { 
+          userId, 
+          username, 
+          timezone, 
+          schedule,
+          updatedAt: new Date()
+        },
+        { upsert: true, new: true }
+      );
+      return true;
+    } catch (error) {
+      console.error('Error saving availability data to MongoDB:', error);
+      // Fall back to file-based storage if MongoDB fails
+      console.log('Falling back to file storage...');
+    }
+  }
+  
+  // File-based storage fallback
+  const data = getAllAvailabilityFromFile();
   const userIndex = data.users.findIndex(user => user.id === userId);
   
   const userData = {
@@ -48,18 +84,42 @@ function setUserAvailability(userId, username, timezone, schedule) {
     data.users[userIndex] = userData;
   }
   
-  return saveAllAvailability(data);
+  return saveAllAvailabilityToFile(data);
 }
 
 // Get a user's availability
-function getUserAvailability(userId) {
-  const data = getAllAvailability();
+async function getUserAvailability(userId) {
+  // Try to use MongoDB if available
+  if (isUsingMongoDB()) {
+    try {
+      const user = await UserAvailability.findOne({ userId });
+      if (user) {
+        // Convert MongoDB document to plain object and format to match file-based storage
+        const userObj = user.toObject();
+        return {
+          id: userObj.userId,
+          username: userObj.username,
+          timezone: userObj.timezone,
+          schedule: userObj.schedule,
+          updatedAt: userObj.updatedAt.toISOString()
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting user availability from MongoDB:', error);
+      // Fall back to file-based storage if MongoDB fails
+      console.log('Falling back to file storage...');
+    }
+  }
+  
+  // File-based storage fallback
+  const data = getAllAvailabilityFromFile();
   return data.users.find(user => user.id === userId);
 }
 
 // Check if a user is currently available
-function isUserCurrentlyAvailable(userId) {
-  const user = getUserAvailability(userId);
+async function isUserCurrentlyAvailable(userId) {
+  const user = await getUserAvailability(userId);
   if (!user) return false;
   
   const now = moment().tz(user.timezone);
@@ -81,8 +141,50 @@ function isUserCurrentlyAvailable(userId) {
 }
 
 // Get all currently available users
-function getCurrentlyAvailableUsers() {
-  const data = getAllAvailability();
+async function getCurrentlyAvailableUsers() {
+  // Try to use MongoDB if available
+  if (isUsingMongoDB()) {
+    try {
+      const allUsers = await UserAvailability.find({});
+      const availableUsers = [];
+      
+      for (const user of allUsers) {
+        const now = moment().tz(user.timezone);
+        const currentDay = now.format('dddd').toLowerCase();
+        const currentTime = now.format('HH:mm');
+        
+        // Check if user has schedule for today
+        if (!user.schedule[currentDay] || user.schedule[currentDay].length === 0) continue;
+        
+        // Check each time range for today
+        for (const range of user.schedule[currentDay]) {
+          const [start, end] = range.split('-');
+          if (currentTime >= start && currentTime <= end) {
+            // Convert MongoDB document to plain object and format
+            const userObj = user.toObject();
+            availableUsers.push({
+              id: userObj.userId,
+              username: userObj.username,
+              timezone: userObj.timezone,
+              schedule: userObj.schedule,
+              updatedAt: userObj.updatedAt,
+              localTime: now.format('HH:mm')
+            });
+            break;
+          }
+        }
+      }
+      
+      return availableUsers;
+    } catch (error) {
+      console.error('Error getting available users from MongoDB:', error);
+      // Fall back to file-based storage if MongoDB fails
+      console.log('Falling back to file storage...');
+    }
+  }
+  
+  // File-based storage fallback
+  const data = getAllAvailabilityFromFile();
   const availableUsers = [];
   
   for (const user of data.users) {
@@ -132,8 +234,8 @@ function formatSchedule(schedule, timezone) {
 }
 
 // Get a user's local time
-function getUserLocalTime(userId) {
-  const user = getUserAvailability(userId);
+async function getUserLocalTime(userId) {
+  const user = await getUserAvailability(userId);
   if (!user) return null;
   
   return moment().tz(user.timezone).format('YYYY-MM-DD HH:mm:ss');
@@ -174,7 +276,7 @@ function parseScheduleString(scheduleString) {
 }
 
 module.exports = {
-  getAllAvailability,
+  getAllAvailability: getAllAvailabilityFromFile,
   setUserAvailability,
   getUserAvailability,
   isUserCurrentlyAvailable,

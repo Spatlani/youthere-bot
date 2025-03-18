@@ -4,6 +4,12 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+// Import database connection
+const connectDB = require('./db');
+
+// Try to connect to MongoDB
+connectDB();
+
 // Create a new client instance
 const client = new Client({
   intents: [
