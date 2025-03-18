@@ -90,17 +90,64 @@ You can add multiple time ranges for each day by separating them with commas:
 ### Setting Your Availability (Simple Version)
 
 ```
-/easy-schedule timezone:<timezone code> weekdays:<yes/no> weekend:<yes/no> start_time:<HH:MM> end_time:<HH:MM>
+/easy-schedule region:<select region> timezone:<select timezone> weekdays:<yes/no> weekend:<yes/no> start_time:<HH:MM> end_time:<HH:MM>
 ```
 
 Example:
 ```
-/easy-schedule timezone:EST weekdays:yes weekend:no start_time:09:00 end_time:17:00
+/easy-schedule region:North America timezone:EST weekdays:yes weekend:no start_time:09:00 end_time:17:00
 ```
 
 This sets a 9-5 schedule on weekdays (Monday-Friday) in Eastern Time (US).
 
-Available timezone codes: IST, VIC, MST/MDT, EST, NPT, CET, HKT/GMT+8, CST
+The command now uses a two-step selection process:
+1. First select your region
+2. Then select your timezone from that region
+
+Available timezone codes: 
+
+**Asia**
+- IST (Indian Standard Time)
+- NPT (Nepal Time)
+- HKT/GMT+8 (Hong Kong Time)
+- JST (Japan Standard Time)
+- KST (Korea Standard Time)
+- CST_ASIA (China Standard Time)
+- SGT (Singapore Time)
+- PHT (Philippine Time)
+- ICT (Indochina Time - Thailand)
+
+**Australia/Pacific**
+- VIC (Victoria Time - Australia)
+- AEST (Australian Eastern Standard Time)
+- ACST (Australian Central Standard Time)
+- AWST (Australian Western Standard Time)
+- NZST (New Zealand Standard Time)
+
+**North America**
+- EST (Eastern Time - US)
+- CST (Central Time - US)
+- MST/MDT (Mountain Time)
+- PST (Pacific Time - US)
+- AKST (Alaska Time)
+- HST (Hawaii Time)
+
+**Europe**
+- GMT/BST (UK Time)
+- CET/CEST (Central European Time)
+- EET/EEST (Eastern European Time)
+- MSK (Moscow Time)
+
+**Middle East/Africa**
+- GST (Gulf Standard Time - UAE)
+- EAT (East Africa Time)
+- SAST (South Africa Standard Time)
+
+**South/Central America**
+- BRT (Brasilia Time)
+- ART (Argentina Time)
+- PET (Peru Time)
+- COT (Colombia Time)
 
 ### Checking Who's Available
 

@@ -39,19 +39,36 @@ for (const file of commandFiles) {
 
 // Handle command interactions
 client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+  // Handle slash commands
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
 
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: 'There was an error executing this command!', flags: { ephemeral: true } });
+      } else {
+        await interaction.reply({ content: 'There was an error executing this command!', flags: { ephemeral: true } });
+      }
+    }
+  }
+  
+  // Handle autocomplete interactions
+  else if (interaction.isAutocomplete()) {
+    const command = client.commands.get(interaction.commandName);
 
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'There was an error executing this command!', flags: { ephemeral: true } });
-    } else {
-      await interaction.reply({ content: 'There was an error executing this command!', flags: { ephemeral: true } });
+    if (!command || !command.autocomplete) {
+      console.error(`No autocomplete handler for command ${interaction.commandName}`);
+      return;
+    }
+
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      console.error(error);
     }
   }
 });

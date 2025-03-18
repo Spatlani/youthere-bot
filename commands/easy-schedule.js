@@ -4,36 +4,78 @@ const utils = require('../utils');
 
 // Mapping of common timezone abbreviations to IANA timezone identifiers
 const TIMEZONE_MAPPING = {
+  // Asia
   'IST': 'Asia/Kolkata',              // Indian Standard Time
-  'VIC': 'Australia/Melbourne',       // Victoria Time (Australia)
-  'MST': 'America/Denver',            // Mountain Standard Time
-  'MDT': 'America/Denver',            // Mountain Daylight Time
-  'EST': 'America/New_York',          // Eastern Standard Time (US)
   'NPT': 'Asia/Kathmandu',            // Nepal Time
-  'CET': 'Europe/Paris',              // Central European Time
   'HKT': 'Asia/Hong_Kong',            // Hong Kong Time
   'GMT+8': 'Asia/Hong_Kong',          // GMT+8 (same as Hong Kong)
-  'CST': 'America/Chicago'            // Central Standard Time (US)
+  'JST': 'Asia/Tokyo',                // Japan Standard Time
+  'KST': 'Asia/Seoul',                // Korea Standard Time
+  'CST_ASIA': 'Asia/Shanghai',        // China Standard Time
+  'SGT': 'Asia/Singapore',            // Singapore Time
+  'PHT': 'Asia/Manila',               // Philippine Time
+  'ICT': 'Asia/Bangkok',              // Indochina Time
+  
+  // Australia/Pacific
+  'VIC': 'Australia/Melbourne',       // Victoria Time (Australia)
+  'AEST': 'Australia/Sydney',         // Australian Eastern Standard Time
+  'ACST': 'Australia/Adelaide',       // Australian Central Standard Time
+  'AWST': 'Australia/Perth',          // Australian Western Standard Time
+  'NZST': 'Pacific/Auckland',         // New Zealand Standard Time
+  
+  // North America
+  'EST': 'America/New_York',          // Eastern Standard Time (US)
+  'CST': 'America/Chicago',           // Central Standard Time (US)
+  'MST': 'America/Denver',            // Mountain Standard Time
+  'MDT': 'America/Denver',            // Mountain Daylight Time
+  'PST': 'America/Los_Angeles',       // Pacific Standard Time
+  'AKST': 'America/Anchorage',        // Alaska Standard Time
+  'HST': 'Pacific/Honolulu',          // Hawaii Standard Time
+  
+  // Europe
+  'GMT': 'Europe/London',             // Greenwich Mean Time
+  'BST': 'Europe/London',             // British Summer Time
+  'CET': 'Europe/Paris',              // Central European Time
+  'CEST': 'Europe/Paris',             // Central European Summer Time
+  'EET': 'Europe/Helsinki',           // Eastern European Time
+  'EEST': 'Europe/Helsinki',          // Eastern European Summer Time
+  'MSK': 'Europe/Moscow',             // Moscow Standard Time
+  
+  // Middle East/Africa
+  'GST': 'Asia/Dubai',                // Gulf Standard Time
+  'EAT': 'Africa/Nairobi',            // East Africa Time
+  'SAST': 'Africa/Johannesburg',      // South Africa Standard Time
+  
+  // South/Central America
+  'BRT': 'America/Sao_Paulo',         // Brasilia Time
+  'ART': 'America/Argentina/Buenos_Aires', // Argentina Time
+  'PET': 'America/Lima',              // Peru Time
+  'COT': 'America/Bogota'             // Colombia Time
 };
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('easy-schedule')
     .setDescription('Set your work schedule with a simpler format')
-    .addStringOption(option =>
-      option.setName('timezone')
-        .setDescription('Your timezone abbreviation (e.g., EST, CET, HKT)')
+    .addStringOption(option => 
+      option.setName('region')
+        .setDescription('Select your timezone region')
         .setRequired(true)
         .addChoices(
-          { name: 'IST - Indian Standard Time', value: 'IST' },
-          { name: 'VIC - Victoria Time (Australia)', value: 'VIC' },
-          { name: 'MST/MDT - Mountain Time', value: 'MST' },
-          { name: 'EST - Eastern Time (US)', value: 'EST' },
-          { name: 'NPT - Nepal Time', value: 'NPT' },
-          { name: 'CET - Central European Time', value: 'CET' },
-          { name: 'HKT/GMT+8 - Hong Kong Time', value: 'HKT' },
-          { name: 'CST - Central Time (US)', value: 'CST' }
-        ))
+          { name: 'Asia', value: 'asia' },
+          { name: 'Australia/Pacific', value: 'australia' },
+          { name: 'North America', value: 'north_america' },
+          { name: 'Europe', value: 'europe' },
+          { name: 'Middle East/Africa', value: 'middle_east_africa' },
+          { name: 'South/Central America', value: 'south_america' }
+        )
+    )
+    .addStringOption(option => 
+      option.setName('timezone')
+        .setDescription('Your timezone')
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
     .addStringOption(option =>
       option.setName('weekdays')
         .setDescription('Are you available on weekdays? (Monday-Friday)')
@@ -58,6 +100,72 @@ module.exports = {
       option.setName('end_time')
         .setDescription('Your daily end time (e.g., 17:00, 22:00)')
         .setRequired(true)),
+  
+  async autocomplete(interaction) {
+    const region = interaction.options.getString('region');
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+    let choices = [];
+
+    if (region === 'asia') {
+      choices = [
+        { name: 'IST - Indian Standard Time', value: 'IST' },
+        { name: 'NPT - Nepal Time', value: 'NPT' },
+        { name: 'HKT/GMT+8 - Hong Kong Time', value: 'HKT' },
+        { name: 'JST - Japan Standard Time', value: 'JST' },
+        { name: 'KST - Korea Standard Time', value: 'KST' },
+        { name: 'CST (Asia) - China Standard Time', value: 'CST_ASIA' },
+        { name: 'SGT - Singapore Time', value: 'SGT' },
+        { name: 'PHT - Philippine Time', value: 'PHT' },
+        { name: 'ICT - Indochina Time (Thailand)', value: 'ICT' }
+      ];
+    } else if (region === 'australia') {
+      choices = [
+        { name: 'AEST - Australian Eastern Standard Time', value: 'AEST' },
+        { name: 'ACST - Australian Central Standard Time', value: 'ACST' },
+        { name: 'AWST - Australian Western Standard Time', value: 'AWST' },
+        { name: 'VIC - Victoria Time (Australia)', value: 'VIC' },
+        { name: 'NZST - New Zealand Standard Time', value: 'NZST' }
+      ];
+    } else if (region === 'north_america') {
+      choices = [
+        { name: 'EST - Eastern Time (US)', value: 'EST' },
+        { name: 'CST - Central Time (US)', value: 'CST' },
+        { name: 'MST/MDT - Mountain Time', value: 'MST' },
+        { name: 'PST - Pacific Time (US)', value: 'PST' },
+        { name: 'AKST - Alaska Time', value: 'AKST' },
+        { name: 'HST - Hawaii Time', value: 'HST' }
+      ];
+    } else if (region === 'europe') {
+      choices = [
+        { name: 'GMT/BST - UK Time', value: 'GMT' },
+        { name: 'CET/CEST - Central European Time', value: 'CET' },
+        { name: 'EET/EEST - Eastern European Time', value: 'EET' },
+        { name: 'MSK - Moscow Time', value: 'MSK' }
+      ];
+    } else if (region === 'middle_east_africa') {
+      choices = [
+        { name: 'GST - Gulf Standard Time (UAE)', value: 'GST' },
+        { name: 'EAT - East Africa Time', value: 'EAT' },
+        { name: 'SAST - South Africa Standard Time', value: 'SAST' }
+      ];
+    } else if (region === 'south_america') {
+      choices = [
+        { name: 'BRT - Brasilia Time', value: 'BRT' },
+        { name: 'ART - Argentina Time', value: 'ART' },
+        { name: 'PET - Peru Time', value: 'PET' },
+        { name: 'COT - Colombia Time', value: 'COT' }
+      ];
+    }
+
+    // Filter choices based on user input
+    const filtered = choices.filter(choice => 
+      choice.name.toLowerCase().includes(focusedValue)
+    );
+    
+    await interaction.respond(
+      filtered.map(choice => ({ name: choice.name, value: choice.value }))
+    );
+  },
   
   async execute(interaction) {
     const timezoneCode = interaction.options.getString('timezone');
